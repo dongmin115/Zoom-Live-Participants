@@ -63,8 +63,8 @@ export function hours(seconds: number): string {
 }
 
 /** 09-08 (월) */
-function dayLabel(date: string): string {
-	const d = new Date(`${date}T00:00:00+09:00`);
+export function dayLabel(date: string): string {
+	const d = new Date(`${date}T00:00:00Z`);
 	return `${date.slice(5)} (${WEEKDAY[d.getUTCDay()] ?? ""})`;
 }
 

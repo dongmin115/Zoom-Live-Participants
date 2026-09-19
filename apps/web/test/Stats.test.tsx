@@ -4,7 +4,7 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import type { Stats as StatsData } from "../src/api.ts";
-import Stats, { hours, Ranking, Summary } from "../src/Stats.tsx";
+import Stats, { dayLabel, hours, Ranking, Summary } from "../src/Stats.tsx";
 
 function render(data?: StatsData): string {
 	const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -62,6 +62,14 @@ describe("시간 표기", () => {
 	it("1분이 안 되면 0분이라고 하지 않는다 — 고장으로 읽힌다", () => {
 		expect(hours(20)).toBe("1분 미만");
 		expect(hours(0)).toBe("0");
+	});
+});
+
+describe("날짜 표기", () => {
+	it("요일이 날짜와 맞는다 — 한국 자정을 UTC 로 읽으면 하루 밀린다", () => {
+		// 2026-09-17 은 목요일
+		expect(dayLabel("2026-09-17")).toBe("09-17 (목)");
+		expect(dayLabel("2026-09-13")).toBe("09-13 (일)");
 	});
 });
 

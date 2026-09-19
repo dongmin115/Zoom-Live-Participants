@@ -15,7 +15,7 @@ function hours(seconds: number): string {
 }
 
 function short(date: string): string {
-	const d = new Date(`${date}T00:00:00+09:00`);
+	const d = new Date(`${date}T00:00:00Z`);
 	return `${date.slice(5)} ${WEEKDAY[d.getUTCDay()] ?? ""}`;
 }
 
