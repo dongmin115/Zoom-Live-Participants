@@ -249,6 +249,33 @@ function useRotatingNotice(notices: Notice[]): Notice | null {
 	return notices[index % Math.max(notices.length, 1)] ?? null;
 }
 
+// visibilityState 만 보면 안 된다 — 탭은 그대로 두고 다른 창으로 포커스만
+// 옮겨도 여전히 visible 이라 폴링이 안 멈춘다. hasFocus 도 같이 봐야 한다.
+function useIsWindowActive(): boolean {
+	const isBrowser = typeof document !== "undefined";
+	const [active, setActive] = useState(
+		() => !isBrowser || (document.visibilityState === "visible" && document.hasFocus()),
+	);
+
+	useEffect(() => {
+		if (!isBrowser) return;
+
+		const update = () =>
+			setActive(document.visibilityState === "visible" && document.hasFocus());
+
+		document.addEventListener("visibilitychange", update);
+		window.addEventListener("focus", update);
+		window.addEventListener("blur", update);
+		return () => {
+			document.removeEventListener("visibilitychange", update);
+			window.removeEventListener("focus", update);
+			window.removeEventListener("blur", update);
+		};
+	}, []);
+
+	return active;
+}
+
 export default function App() {
 	// 경과 시간 표시를 1초마다 다시 그린다 (데이터 요청과 무관)
 	const [now, setNow] = useState(() => Date.now());
@@ -266,10 +293,13 @@ export default function App() {
 
 	const dismissToast = useCallback(() => setToast(null), []);
 
+	const isWindowActive = useIsWindowActive();
+
 	const { data, isPending, isError, isFetching } = useQuery({
 		queryKey: ["presence"],
 		queryFn: fetchPresence,
-		refetchInterval: POLL_INTERVAL_MS,
+		// 안 보고 있을 땐 폴링을 꺼둔다. 돌아오면 refetchOnWindowFocus 가 알아서 갱신한다.
+		refetchInterval: isWindowActive ? POLL_INTERVAL_MS : false,
 		// 통신이 끊겨도 직전 목록을 유지한다.
 		// 화면이 비면 전원 퇴장으로 오해된다.
 		placeholderData: (previous) => previous,
